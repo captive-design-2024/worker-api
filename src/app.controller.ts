@@ -1,31 +1,19 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { AppService } from './app.service';
-import { Response } from 'express';
-import * as path from 'path';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Post('generate-subtitle')
-  async generateSubtitleFromYoutube(
-    @Body('url') url: string,
-    @Res() res: Response,
-  ) {
+  async generateSubtitleFromYoutube(@Body('url') url: string): Promise<string> {
     try {
       const srtFilePath =
         await this.appService.generateSubtitleFromYoutube(url);
-
-      console.log('Generated SRT file:', srtFilePath);
-      res.download(srtFilePath, path.basename(srtFilePath), (err) => {
-        if (err) {
-          console.error('Error downloading the file', err);
-          res.status(500).send('Error downloading the file');
-        }
-      });
+      return srtFilePath;
     } catch (error) {
       console.error('Error generating subtitle from YouTube', error);
-      res.status(500).send('Error generating subtitle from YouTube');
+      throw new Error('Error generating subtitle from YouTube');
     }
   }
 

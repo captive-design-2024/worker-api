@@ -20,18 +20,19 @@ export class SttController {
   async transcribeFile(
     @UploadedFile() file,
     @Res() res: Response,
-    @Body('spk_count') spkCount: number = 1,
+    @Body('spk_count') spkCount: string = '1',
   ) {
+    const spkCountNumber = parseInt(spkCount, 10);
     try {
       const transcribeId = await this.sttService.transcribeFile(
         file.path,
-        spkCount,
+        spkCountNumber,
       );
       const result = await this.sttService.getTranscribeResult(transcribeId);
       res.json(result);
     } catch (error) {
       console.error('Error', error);
-      res.status(500).send('Internal Server Error');
+      res.status(500).send('Return Zero API Error');
     }
   }
 }
