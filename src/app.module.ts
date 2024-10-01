@@ -6,9 +6,17 @@ import { SttModule } from './stt/stt.module';
 import { LlmModule } from './llm/llm.module';
 import { TtsModule } from './tts/tts.module';
 import { SrtModule } from './srt/srt.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
-  imports: [YoutubeModule, SttModule, LlmModule, TtsModule, SrtModule],
+  imports: [
+    YoutubeModule,
+    SttModule,
+    LlmModule,
+    TtsModule,
+    SrtModule,
+    FilesModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
