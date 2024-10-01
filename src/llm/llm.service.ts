@@ -38,4 +38,11 @@ export class LlmService {
       throw new Error('Failed to communicate with OpenAI API');
     }
   }
+
+  async getSRT(id: string): Promise<string> {
+    return await axios.post(
+      'http://localhost:3000/files/readSRT',
+      {content_projectID: id, content_language: 'kr'}
+    )
+  }
 }
