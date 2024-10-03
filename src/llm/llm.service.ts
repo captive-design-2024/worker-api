@@ -39,10 +39,11 @@ export class LlmService {
     }
   }
 
-  async getSRT(id: string): Promise<string> {
-    return await axios.post(
+  async getSRTpath(id: string): Promise<string> {
+    const response = await axios.post(
       'http://localhost:3000/files/readSRT',
-      {content_projectID: id, content_language: 'kr'}
+      { content_projectID: id, content_language: 'kr'},
     )
+    return response.data;
   }
 }
