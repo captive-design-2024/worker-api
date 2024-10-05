@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from "@nestjs/common";
+import { Controller, Post, Body } from '@nestjs/common';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { LlmService } from './llm.service';
@@ -11,7 +11,7 @@ export class LlmController {
   async sendMessage(@Body('content_projectID') id: string): Promise<string> {
     const filepath = await this.messageService.getSRTpath(id);
     const resolvedPath = path.resolve('srt/' + filepath + '.srt');
-    const data = await fs.readFile(resolvedPath, 'utf-8')
-    return this.messageService.sendMessage( data + "프롬프팅" )
+    const data = await fs.readFile(resolvedPath, 'utf-8');
+    return this.messageService.sendMessage(data + '프롬프팅');
   }
 }
