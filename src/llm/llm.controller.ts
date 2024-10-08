@@ -12,6 +12,12 @@ export class LlmController {
     const filepath = await this.messageService.getSRTpath(id);
     const resolvedPath = path.resolve('srt/' + filepath + '.srt');
     const data = await fs.readFile(resolvedPath, 'utf-8');
-    return this.messageService.sendMessage(data + '프롬프팅');
+    return this.messageService.sendMessage(data + '위는 오디오 추출로 만든 자막인데 문맥적으로 어색한 부분에 밑줄쳐줘');
+  }
+
+  @Post('check')
+  async check(@Body('content') content: string) {
+    console.log(content + '위는 오디오 추출로 만든 자막인데 문맥적으로 어색한 부분에 밑줄쳐줘')
+    return this.messageService.sendMessage(content + '위는 오디오 추출로 만든 SRT파일이야. 내용에서 문맥적으로 어색한 부분에 밑줄쳐주고 형식은 SRT로 해줘');
   }
 }
