@@ -12,7 +12,7 @@ export class LlmController {
     const filepath = await this.messageService.getSRTpath(id);
     const resolvedPath = path.resolve('srt/' + filepath + '.srt');
     const data = await fs.readFile(resolvedPath, 'utf-8');
-    return this.messageService.sendMessage(data + '위는 오디오 추출로 만든 자막인데 문맥적으로 어색한 부분에 밑줄쳐줘');
+    return this.messageService.sendMessage(data + '위의 자막을 수정해주세요. 이 자막은 STT를 활용해 유튜브 동영상의 음성을 자막으로 생성한 것입니다. 자막 속 인물의 말투는 유지해주세요. 문맥상 STT가 자막을 생성할 때, 영상에서의 원래 의미와는 다르게 생성된 것으로 유추되는 단어만을 수정해주세요. 수정된 전체 자막을 출력해주세요. 단, 수정된 부분은 볼드체로 표시하고, 수정 내용이 필요 없는 문장은 원래 문장 그대로 출력해주세요.');
   }
 
   @Post('check')
