@@ -21,7 +21,7 @@ export class LlmService {
         {
           model: 'gpt-3.5-turbo',
           messages: [{ role: 'user', content: prompt }],
-          max_tokens: 600,
+          max_tokens: 850,
         },
         {
           headers: {
@@ -40,7 +40,7 @@ export class LlmService {
   }
 
   async getSRTpath(id: string): Promise<string> {
-    const response = await axios.post('http://localhost:3000/files/readSRTpath', {
+    const response = await axios.post('http://host.docker.internal:3000/files/readSRTpath', {
       content_projectID: id,
       content_language: 'kr',
     });
