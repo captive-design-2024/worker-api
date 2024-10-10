@@ -21,7 +21,7 @@ export class LlmService {
         {
           model: 'gpt-3.5-turbo',
           messages: [{ role: 'user', content: prompt }],
-          max_tokens: 150,
+          max_tokens: 600,
         },
         {
           headers: {
