@@ -30,4 +30,13 @@ export class FilesService {
       throw new NotFoundException('File not found');
     }
   }
+
+  async updateSRT(path: string, content: string) {
+    try {
+      await fs.writeFile(path,content, 'utf-8');
+      return 'success';
+    } catch (err) {
+      throw new Error('Failed to update the file');
+    }
+  }
 }

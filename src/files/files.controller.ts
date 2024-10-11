@@ -24,4 +24,9 @@ export class FilesController {
       throw new NotFoundException(error.message);
     }
   }
+
+  @Post('updateSrt')
+  async updateSRT(@Body('path') path: string, @Body('content') content: string) {
+    return await this.filesService.updateSRT(path, content);
+  }
 }
