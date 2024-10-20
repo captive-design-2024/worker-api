@@ -7,7 +7,6 @@ async function bootstrap() {
 
   app.enableCors();
 
-  // swagger
   const config = new DocumentBuilder()
     .setTitle('subHelper worker API')
     .setDescription('API description')
