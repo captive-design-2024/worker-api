@@ -9,7 +9,7 @@ export class YoutubeService {
   async downloadAudio(url: string): Promise<string> {
     try {
       const uuid = uuidv4();
-      const downloadsDir = path.join(__dirname, '../../downloads');
+      const downloadsDir = path.join(__dirname, '../../storage/audio');
       const outputFilePath = path.join(downloadsDir, `${uuid}.mp3`);
 
       await fs.promises.mkdir(downloadsDir, { recursive: true });

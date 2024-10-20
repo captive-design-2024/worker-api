@@ -40,7 +40,7 @@ export class SrtService {
   }
 
   async saveSrtToFile(srtContent: string, filename: string): Promise<string> {
-    const filePath = path.join(__dirname, '../../srt', filename);
+    const filePath = path.join(__dirname, '../../storage/srt', filename);
     await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
     await fs.promises.writeFile(filePath, srtContent, 'utf8');
     return filePath;

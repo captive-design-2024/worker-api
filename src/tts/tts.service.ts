@@ -55,7 +55,7 @@ export class TtsService {
     const { filename, contents } = data;
     const folderPath = path.resolve(
       __dirname,
-      '../../dub',
+      '../../storage/dubbing',
       path.parse(filename).name,
     );
     await fs.promises.mkdir(folderPath, { recursive: true });

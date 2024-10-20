@@ -7,7 +7,7 @@ export class TtsController {
 
   @Post('test')
   async testTTS(@Body('text') text: string): Promise<string> {
-    const path = '../../dub';
+    const path = '../../storage/dubbing';
     const index = 1;
     return this.textToSpeechService.textToSpeech(text, path, index);
   }
