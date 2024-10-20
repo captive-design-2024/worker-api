@@ -4,6 +4,12 @@ import * as path from 'path';
 
 @Injectable()
 export class SrtService {
+  async generateSrtFile(jsonData: any, filename: string): Promise<string> {
+    const srtContent = this.convertJsonToSrt(jsonData);
+    const filePath = await this.saveSrtToFile(srtContent, filename);
+    return filePath;
+  }
+
   convertJsonToSrt(jsonData: any): string {
     let srtContent = '';
     jsonData.forEach((utterance, index) => {
@@ -38,5 +44,49 @@ export class SrtService {
     await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
     await fs.promises.writeFile(filePath, srtContent, 'utf8');
     return filePath;
+  }
+
+  async parseSRT(
+    filePath: string,
+  ): Promise<{ filename: string; contents: any[] }> {
+    const content = await this.readFile(filePath);
+    const strings = this.extractSubtitles(content);
+    const filename = path.basename(filePath);
+    return { filename: filename, contents: strings };
+  }
+
+  private async readFile(filePath: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      fs.readFile(filePath, 'utf-8', (err, data) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(data);
+      });
+    });
+  }
+
+  private extractSubtitles(srtContent: string): any[] {
+    const lines = srtContent.split('\n');
+    const subtitles = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      if (!isNaN(parseInt(lines[i]))) {
+        const index = parseInt(lines[i]);
+        const [start, end] = lines[i + 1].split(' --> ');
+        const string = lines[i + 2];
+
+        subtitles.push({
+          index: index,
+          start: start,
+          end: end,
+          string: string,
+          len: string.length,
+        });
+
+        i += 2;
+      }
+    }
+    return subtitles;
   }
 }

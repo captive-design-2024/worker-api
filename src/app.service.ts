@@ -17,15 +17,12 @@ export class AppService {
   async generateSubtitleFromYoutube(url: string): Promise<string> {
     try {
       const filePath = await this.youtubeService.downloadAudio(url);
-      // const filePath =
-      //   '/Users/joonseok/project/worker-api-test/downloads/2d73d9b2-480b-4ef2-9c72-b49899f417d5.mp3';
       const transcribeId = await this.sttService.transcribeFile(filePath, 1);
       const utterances =
         await this.sttService.getTranscribeResult(transcribeId);
-      const srtContent = this.srtService.convertJsonToSrt(utterances);
       const srtFilename = `${path.basename(filePath, path.extname(filePath))}.srt`;
-      const srtFilePath = await this.srtService.saveSrtToFile(
-        srtContent,
+      const srtFilePath = await this.srtService.generateSrtFile(
+        utterances,
         srtFilename,
       );
       return srtFilePath;
@@ -35,9 +32,10 @@ export class AppService {
     }
   }
 
-  async generateDubbing(filePath: string): Promise<void> {
+  async generateDubbing(filePath: string): Promise<string> {
     try {
-      return this.ttsService.generateVoiceOver(filePath);
+      const contents = await this.srtService.parseSRT(filePath);
+      return this.ttsService.generateVoiceOver(contents);
     } catch (error) {
       console.error('Error generating dubbing:', error);
       throw new Error('dubbing generation from file failed');

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
+import * as ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
-import ffmpeg from 'fluent-ffmpeg';
 
 dotenv.config();
 
@@ -11,163 +11,113 @@ dotenv.config();
 export class TtsService {
   private readonly ttsApiUrl: string;
   private readonly apiKey: string;
-  private readonly outputDir: string;
-  private readonly finalOutputFile: string;
 
   constructor() {
     this.ttsApiUrl = 'https://api.openai.com/v1/audio/speech';
     this.apiKey = process.env.OPENAI_API_KEY;
-    this.outputDir = path.resolve(__dirname, '../../dub');
-    this.finalOutputFile = path.join(this.outputDir, 'final_output.mp3');
   }
 
-  async generateVoiceOver(srtFilePath: string): Promise<void> {
-    const srtContent = await fs.promises.readFile(srtFilePath, 'utf-8');
-    const subtitleLines = this.parseSrt(srtContent);
+  async textToSpeech(
+    text: string,
+    folderPath: string,
+    index: number,
+  ): Promise<string> {
+    const speechFile = path.resolve(__dirname, folderPath, `${index}.mp3`);
 
-    if (!fs.existsSync(this.outputDir)) {
-      fs.mkdirSync(this.outputDir, { recursive: true });
+    try {
+      const response = await axios.post(
+        this.ttsApiUrl,
+        {
+          model: 'tts-1',
+          voice: 'alloy',
+          input: text,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          responseType: 'arraybuffer',
+        },
+      );
+
+      const buffer = Buffer.from(response.data);
+      await fs.promises.writeFile(speechFile, buffer);
+
+      return speechFile;
+    } catch (error) {
+      console.error('Error generating speech from text', error);
+      throw new Error('Failed to generate speech from text');
     }
+  }
 
-    await Promise.all(
-      subtitleLines.map(async (line) => {
-        try {
-          const response = await axios.post(
-            this.ttsApiUrl,
-            {
-              model: 'tts-1',
-              voice: 'alloy',
-              input: line.text,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${this.apiKey}`,
-                'Content-Type': 'application/json',
-              },
-              responseType: 'arraybuffer',
-            },
-          );
-
-          const buffer = Buffer.from(response.data);
-          const audioFilePath = path.join(this.outputDir, `${line.index}.mp3`);
-          await fs.promises.writeFile(audioFilePath, buffer);
-        } catch (error) {
-          console.error(
-            `Error generating speech for subtitle index ${line.index}`,
-            error,
-          );
-          throw new Error(
-            `Failed to generate speech for subtitle index ${line.index}`,
-          );
-        }
-      }),
+  async generateDubParts(data: any): Promise<string> {
+    const { filename, contents } = data;
+    const folderPath = path.resolve(
+      __dirname,
+      '../../dub',
+      path.parse(filename).name,
     );
+    await fs.promises.mkdir(folderPath, { recursive: true });
 
-    await this.concatenateAudioWithSilence(subtitleLines);
-  }
-
-  private parseSrt(
-    srtContent: string,
-  ): { index: number; text: string; startTime: number; endTime: number }[] {
-    const lines = srtContent
-      .split('\n')
-      .filter((line) => line.trim().length > 0);
-    const subtitles: {
-      index: number;
-      text: string;
-      startTime: number;
-      endTime: number;
-    }[] = [];
-    let index = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      if (!isNaN(Number(lines[i]))) {
-        index = Number(lines[i]);
-        const [startTimeStr, endTimeStr] = lines[i + 1].split(' --> ');
-        const text = lines[i + 2];
-
-        const startTime = this.srtTimeToSeconds(startTimeStr);
-        const endTime = this.srtTimeToSeconds(endTimeStr);
-
-        if (text) {
-          subtitles.push({ index, text, startTime, endTime });
-        }
-        i += 2;
-      }
+    for (const content of contents) {
+      const { index, string } = content;
+      await this.textToSpeech(string, folderPath, index);
     }
 
-    return subtitles;
+    return folderPath;
   }
 
-  private srtTimeToSeconds(timeStr: string): number {
-    const [hours, minutes, seconds] = timeStr.split(':');
-    const [sec, ms] = seconds.split(',');
-    return +hours * 3600 + +minutes * 60 + +sec + +ms / 1000;
-  }
+  async createSequence(folderPath: string, jsonData: any): Promise<string> {
+    const audioInputs: string[] = [];
+    const delays: string[] = [];
+    const outputPath = path.resolve(folderPath, 'dubbing.mp3');
 
-  private async concatenateAudioWithSilence(
-    subtitleLines: {
-      index: number;
-      text: string;
-      startTime: number;
-      endTime: number;
-    }[],
-  ): Promise<void> {
-    const segments: string[] = [];
-    let previousEndTime = 0;
+    jsonData.contents.forEach((content) => {
+      const audioFilePath = path.resolve(folderPath, `${content.index}.mp3`);
+      audioInputs.push(audioFilePath);
 
-    for (const line of subtitleLines) {
-      const silenceDuration = line.startTime - previousEndTime;
-      if (silenceDuration > 0) {
-        const silenceFilePath = path.join(
-          this.outputDir,
-          `silence_${line.index}.mp3`,
-        );
-        await this.generateSilence(silenceFilePath, silenceDuration);
-        segments.push(silenceFilePath);
-      }
-
-      const audioFilePath = path.join(this.outputDir, `${line.index}.mp3`);
-      segments.push(audioFilePath);
-      previousEndTime = line.endTime;
-    }
+      const [hours, minutes, secondsMs] = content.start.split(':');
+      const [seconds, milliseconds] = secondsMs.split(',');
+      const totalMilliseconds =
+        (+hours * 3600 + +minutes * 60 + +seconds) * 1000 + +milliseconds;
+      delays.push(totalMilliseconds.toString());
+    });
 
     return new Promise((resolve, reject) => {
-      const ffmpegCmd = ffmpeg();
-      segments.forEach((segment) => {
-        ffmpegCmd.input(segment);
+      const delayFilters = audioInputs
+        .map(
+          (_, index) =>
+            `[${index}]adelay=${delays[index]}|${delays[index]}[a${index + 1}]`,
+        )
+        .join('; ');
+      const amixInputs = audioInputs
+        .map((_, index) => `[a${index + 1}]`)
+        .join('');
+      const amixFilter = `${amixInputs}amix=inputs=${audioInputs.length}`;
+      const filter = `${delayFilters}; ${amixFilter}`;
+      const ffmpegCommand = ffmpeg();
+
+      audioInputs.forEach((audioInput) => {
+        ffmpegCommand.input(audioInput);
       });
 
-      ffmpegCmd
-        .audioCodec('libmp3lame')
+      ffmpegCommand
+        .complexFilter(filter)
         .on('end', () => {
-          console.log('Concatenation finished!');
-          resolve();
+          console.log('Audio sequence creation finished!');
+          resolve(outputPath);
         })
         .on('error', (err) => {
-          console.error('Error during concatenation', err);
+          console.error('Error creating audio sequence:', err);
           reject(err);
         })
-        .mergeToFile(this.finalOutputFile);
+        .save(outputPath);
     });
   }
 
-  private generateSilence(filePath: string, duration: number): Promise<void> {
-    return new Promise((resolve, reject) => {
-      ffmpeg()
-        .input('anullsrc=r=44100:cl=stereo')
-        .inputFormat('lavfi')
-        .audioCodec('libmp3lame')
-        .duration(duration)
-        .on('end', () => {
-          console.log(`Silence generated: ${filePath}`);
-          resolve();
-        })
-        .on('error', (err) => {
-          console.error(`Error generating silence: ${err.message}`);
-          reject(err);
-        })
-        .save(filePath);
-    });
+  async generateVoiceOver(contents: any): Promise<string> {
+    const folderPath = await this.generateDubParts(contents);
+    return this.createSequence(folderPath, contents);
   }
 }

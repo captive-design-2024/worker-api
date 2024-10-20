@@ -18,7 +18,7 @@ export class AppController {
   }
 
   @Post('generate-dubbing')
-  async generateDub(@Body('srtFilePath') srtFilePath: string): Promise<void> {
-    return this.appService.generateDubbing(srtFilePath);
+  async generateDub(@Body('srtFilePath') srtFilePath: string): Promise<string> {
+    return await this.appService.generateDubbing(srtFilePath);
   }
 }

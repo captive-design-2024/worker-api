@@ -1,22 +1,36 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { SrtService } from './srt.service';
-import { Response } from 'express';
 
 @Controller('srt')
 export class SrtController {
   constructor(private readonly srtService: SrtService) {}
 
   @Post('generate')
-  async generateSrt(@Body() jsonData: any, @Res() res: Response) {
-    const srtContent = this.srtService.convertJsonToSrt(jsonData);
+  async generateSrt(@Body() jsonData: any): Promise<{ filePath: string }> {
     const filename = 'output.srt';
-    const filePath = await this.srtService.saveSrtToFile(srtContent, filename);
+    try {
+      const filePath = await this.srtService.generateSrtFile(
+        jsonData,
+        filename,
+      );
+      return { filePath };
+    } catch (error) {
+      console.error('Error generating SRT file', error);
+      throw new Error('Error generating SRT file');
+    }
+  }
 
-    res.download(filePath, filename, (err) => {
-      if (err) {
-        console.error('Error downloading the file', err);
-        res.status(500).send('Error downloading the file');
-      }
-    });
+  @Post('parse')
+  async parseSrt(
+    @Body() body: { filePath: string },
+  ): Promise<{ contents: any[] }> {
+    try {
+      const { filePath } = body;
+      const result = await this.srtService.parseSRT(filePath);
+      return result;
+    } catch (error) {
+      console.error('Error parsing SRT file', error);
+      throw new Error('Error parsing SRT file');
+    }
   }
 }
