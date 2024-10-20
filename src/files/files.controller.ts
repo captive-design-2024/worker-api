@@ -26,7 +26,10 @@ export class FilesController {
   }
 
   @Post('updateSrt')
-  async updateSRT(@Body('path') path: string, @Body('content') content: string) {
+  async updateSRT(
+    @Body('path') path: string,
+    @Body('content') content: string,
+  ) {
     return await this.filesService.updateSRT(path, content);
   }
 }

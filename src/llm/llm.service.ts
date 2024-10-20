@@ -40,10 +40,13 @@ export class LlmService {
   }
 
   async getSRTpath(id: string): Promise<string> {
-    const response = await axios.post('http://host.docker.internal:3000/files/readSRTpath', {
-      content_projectID: id,
-      content_language: 'kr',
-    });
+    const response = await axios.post(
+      'http://host.docker.internal:3000/files/readSRTpath',
+      {
+        content_projectID: id,
+        content_language: 'kr',
+      },
+    );
     return response.data;
   }
 }
