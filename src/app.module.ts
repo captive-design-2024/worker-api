@@ -7,6 +7,7 @@ import { LlmModule } from './llm/llm.module';
 import { TtsModule } from './tts/tts.module';
 import { SrtModule } from './srt/srt.module';
 import { FilesModule } from './files/files.module';
+import { LjsModule } from './ljs/ljs.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { FilesModule } from './files/files.module';
     TtsModule,
     SrtModule,
     FilesModule,
+    LjsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

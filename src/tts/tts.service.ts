@@ -105,11 +105,9 @@ export class TtsService {
       ffmpegCommand
         .complexFilter(filter)
         .on('end', () => {
-          console.log('Audio sequence creation finished!');
           resolve(outputPath);
         })
         .on('error', (err) => {
-          console.error('Error creating audio sequence:', err);
           reject(err);
         })
         .save(outputPath);
