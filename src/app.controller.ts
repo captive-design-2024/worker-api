@@ -21,4 +21,17 @@ export class AppController {
   async generateDub(@Body('srtFilePath') srtFilePath: string): Promise<string> {
     return await this.appService.generateDubbing(srtFilePath);
   }
+
+  @Post('generate-ljs')
+  async generateLJS(
+    @Body('audioPath') audioPath: string,
+    @Body('srtPath') srtPath: string,
+  ): Promise<string> {
+    return await this.appService.generateLJSfromSRT(audioPath, srtPath);
+  }
+
+  @Post('generate-ljs-links')
+  async generateLJSfromLinks(@Body('links') links: string[]): Promise<string> {
+    return await this.appService.generateLJSfromLinks(links);
+  }
 }

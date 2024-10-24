@@ -5,9 +5,14 @@ import { LjsService } from './ljs.service';
 export class LjsController {
   constructor(private readonly ljsService: LjsService) {}
 
-  @Post('split')
+  @Post('createLJS')
   async splitAudio(@Body() data: { audioPath: string; subtitles: any }) {
     const { audioPath, subtitles } = data;
-    return await this.ljsService.splitAudioBySubtitles(audioPath, subtitles);
+    return await this.ljsService.createLJSpeechDataset(audioPath, subtitles);
+  }
+
+  @Post('mergeLJS')
+  async mergeDataset(@Body('folderPaths') folderPaths: string[]) {
+    return await this.ljsService.MergeDatasets(folderPaths);
   }
 }
