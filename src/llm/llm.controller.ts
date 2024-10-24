@@ -7,17 +7,6 @@ import { LlmService } from './llm.service';
 export class LlmController {
   constructor(private readonly messageService: LlmService) {}
 
-  @Post()
-  async sendMessage(@Body('content_projectID') id: string): Promise<string> {
-    const filepath = await this.messageService.getSRTpath(id);
-    const resolvedPath = path.resolve('srt/' + filepath + '.srt');
-    const data = await fs.readFile(resolvedPath, 'utf-8');
-    return this.messageService.sendMessage(
-      data +
-        '위 자막은 STT를 활용해 유튜브 동영상의 음성을 자막으로 생성한 것입니다. STT가 자막을 생성할 때, 문맥상 영상에서의 원래 의미와는 다르게 생성된 것으로 유추되는 단어만을 수정해주세요. 단, 수정된 부분만 볼드체로 표시하고, 수정되지 않은 문장은 반드시 원래 문장 그대로 출력해주세요. 형식은 반드시 SRT로 해줘',
-    );
-  }
-
   @Post('check')
   async check(@Body('content') content: string) {
     // console.log(content + '위는 오디오 추출로 만든 자막인데 문맥적으로 어색한 부분에 밑줄쳐줘')
