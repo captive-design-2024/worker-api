@@ -48,9 +48,10 @@ export class LlmService {
   ): Promise<string> {
     try {
       const responseText = await this.sendMessage(prompt);
+      const baseFilename = path.basename(filename, path.extname(filename));
       const outputDir = path.join(
         __dirname,
-        `../../storage/translatedsrt/${language}_${filename}`,
+        `../../storage/translatedsrt/${language}_${baseFilename}`,
       );
       fs.mkdirSync(path.dirname(outputDir), { recursive: true });
 
