@@ -77,7 +77,7 @@ export class AppService {
         console.log('LJS dataset created:', datasetDir);
       } catch (error) {
         console.error('Error generating LJS:', error);
-        throw new Error('LJS generation from file failed');
+        throw new Error(error.message);
       }
     }
     return this.ljsService.MergeDatasets(datasetDir);
