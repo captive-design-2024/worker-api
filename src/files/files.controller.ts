@@ -2,7 +2,6 @@ import { Controller, Post, Body, Res, NotFoundException } from '@nestjs/common';
 import { FilesService } from './files.service';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
-import { join } from 'path';
 
 @Controller('files')
 export class FilesController {
@@ -36,7 +35,7 @@ export class FilesController {
   }
 
   @Post('mp3')
-  async getMP3(@Body('filePath') path: string, @Res() res: Response ) {
+  async getMP3(@Body('filePath') path: string, @Res() res: Response) {
     const filePath = await this.filesService.getMP3(path);
 
     const fileStream = createReadStream(filePath);

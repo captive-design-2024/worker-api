@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
 
 dotenv.config();
 
@@ -39,4 +41,24 @@ export class LlmService {
     }
   }
 
+  async generatenewSrt(
+    prompt: string,
+    language: string,
+    filename: string,
+  ): Promise<string> {
+    try {
+      const responseText = await this.sendMessage(prompt);
+      const outputDir = path.join(
+        __dirname,
+        `../../storage/translatedsrt/${language}_${filename}`,
+      );
+      fs.mkdirSync(path.dirname(outputDir), { recursive: true });
+
+      fs.writeFileSync(outputDir, responseText, 'utf-8');
+      return outputDir;
+    } catch (error) {
+      console.error('Failed to save SRT file', error);
+      throw new Error('Failed to save SRT file');
+    }
+  }
 }
