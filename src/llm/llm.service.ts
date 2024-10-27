@@ -49,11 +49,14 @@ export class LlmService {
     try {
       const responseText = await this.sendMessage(prompt);
       const baseFilename = path.basename(filename);
+      // console.log("base: ",baseFilename)
+      // console.log("lang : ",language)
       const outputDir = path.join(
         __dirname,
         `../../storage/translatedsrt/${language}_${baseFilename}`,
       );
       await fs.promises.mkdir(path.dirname(outputDir), { recursive: true });
+      // console.log("outputdir: ",outputDir)
       await fs.promises.writeFile(outputDir, responseText, 'utf8');
       return outputDir;
     } catch (error) {
