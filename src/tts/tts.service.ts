@@ -71,7 +71,7 @@ export class TtsService {
   async createSequence(folderPath: string, jsonData: any): Promise<string> {
     const audioInputs: string[] = [];
     const delays: string[] = [];
-    const outputPath = path.resolve(folderPath, 'dubbing.mp3');
+    const outputPath = path.resolve(folderPath, 'dubbing.wav');
 
     jsonData.contents.forEach((content) => {
       const audioFilePath = path.resolve(folderPath, `${content.index}.mp3`);
@@ -110,6 +110,7 @@ export class TtsService {
         .on('error', (err) => {
           reject(err);
         })
+        .toFormat('wav')
         .save(outputPath);
     });
   }
