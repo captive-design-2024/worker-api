@@ -46,6 +46,8 @@ export class LjsService {
       ffmpeg(inputPath)
         .setStartTime(startTime)
         .duration(duration)
+        .audioFrequency(22050)
+        .audioChannels(1)
         .toFormat('wav')
         .output(outputPath)
         .on('end', () => {
@@ -61,7 +63,14 @@ export class LjsService {
 
   async createMetadataFile(metadataLines: string[], outputDir: string) {
     const metadataFile = path.join(outputDir, 'metadata.csv');
-    await fs.promises.writeFile(metadataFile, metadataLines.join('\n'), 'utf8');
+    const formattedLines = metadataLines.map((line) =>
+      line.replace(/,/g, '，'),
+    );
+    await fs.promises.writeFile(
+      metadataFile,
+      formattedLines.join('\n'),
+      'utf8',
+    );
   }
 
   formatTime(time: string): string {
@@ -117,7 +126,7 @@ export class LjsService {
     await this.zipDirectory(outputDir, zipFilePath);
 
     datasets.push(outputDir);
-    await this.deleteOriginalFolders(datasets);
+    //await this.deleteOriginalFolders(datasets);
     return zipFilePath;
   }
 
