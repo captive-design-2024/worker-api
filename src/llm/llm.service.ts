@@ -48,14 +48,13 @@ export class LlmService {
   ): Promise<string> {
     try {
       const responseText = await this.sendMessage(prompt);
-      const baseFilename = path.basename(filename, path.extname(filename));
+      const baseFilename = path.basename(filename);
       const outputDir = path.join(
         __dirname,
         `../../storage/translatedsrt/${language}_${baseFilename}`,
       );
-      fs.mkdirSync(path.dirname(outputDir), { recursive: true });
-
-      fs.writeFileSync(outputDir, responseText, 'utf-8');
+      await fs.promises.mkdir(path.dirname(outputDir), { recursive: true });
+      await fs.promises.writeFile(outputDir, responseText, 'utf8');
       return outputDir;
     } catch (error) {
       console.error('Failed to save SRT file', error);
