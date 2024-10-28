@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as ffmpeg from 'fluent-ffmpeg';
+import * as wavDecoder from 'wav-decoder';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
@@ -58,7 +59,7 @@ export class TtsService {
     folderPath: string,
     index: number,
   ): Promise<string> {
-    const speechFile = path.resolve(__dirname, folderPath, `${index}.wav`);
+    const speechFile = path.resolve(__dirname, folderPath, `O_${index}.wav`);
     const router = 'synthesize';
 
     try {
@@ -114,10 +115,58 @@ export class TtsService {
 
     for (const content of contents) {
       const { index, string } = content;
-      await this.VCTTS(string, folderPath, index);
+      const wavPath = await this.VCTTS(string, folderPath, index);
+      this.changeWavSpeed(wavPath, content);
     }
 
     return folderPath;
+  }
+
+  async getWavDuration(wavPath: string): Promise<number> {
+    const buffer = fs.readFileSync(wavPath);
+    const audioData = await wavDecoder.decode(buffer);
+
+    const durationInSeconds = audioData.length / audioData.sampleRate;
+    return durationInSeconds * 1000;
+  }
+
+  async changeWavSpeed(
+    wavPath: string,
+    content: { start: string; end: string },
+  ): Promise<void> {
+    const { start, end } = content;
+
+    const [shours, sminutes, ssecondsMs] = start.split(':');
+    const [sseconds, smilliseconds] = ssecondsMs.split(',');
+    const stotalMilliseconds =
+      (+shours * 3600 + +sminutes * 60 + +sseconds) * 1000 + +smilliseconds;
+
+    const [ehours, eminutes, esecondsMs] = end.split(':');
+    const [eseconds, emilliseconds] = esecondsMs.split(',');
+    const etotalMilliseconds =
+      (+ehours * 3600 + +eminutes * 60 + +eseconds) * 1000 + +emilliseconds;
+
+    const OriginalDuration = etotalMilliseconds - stotalMilliseconds;
+    const wavDuration = await this.getWavDuration(wavPath);
+
+    const speed = wavDuration / OriginalDuration;
+
+    return new Promise((resolve, reject) => {
+      const outputFileName = wavPath.replace('O_', '');
+      const ffmpegCommand = ffmpeg();
+
+      ffmpegCommand
+        .input(wavPath)
+        .audioFilters(`atempo=${speed}`)
+        .on('end', () => {
+          resolve();
+        })
+        .on('error', (err) => {
+          reject(err);
+        })
+        .toFormat('wav')
+        .save(outputFileName);
+    });
   }
 
   async createSequence(folderPath: string, jsonData: any): Promise<string> {
