@@ -22,6 +22,13 @@ export class AppController {
     return await this.appService.generateDubbing(srtFilePath);
   }
 
+  @Post('generate-vc-dubbing')
+  async generateVcDub(
+    @Body('srtFilePath') srtFilePath: string,
+  ): Promise<string> {
+    return await this.appService.generateVCDubbing(srtFilePath);
+  }
+
   @Post('generate-ljs')
   async generateLJS(
     @Body('audioPath') audioPath: string,

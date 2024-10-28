@@ -44,6 +44,16 @@ export class AppService {
     }
   }
 
+  async generateVCDubbing(filePath: string): Promise<string> {
+    try {
+      const contents = await this.srtService.parseSRT(filePath);
+      return this.ttsService.generateVCVoiceOver(contents);
+    } catch (error) {
+      console.error('Error generating dubbing:', error);
+      throw new Error('dubbing generation from file failed');
+    }
+  }
+
   async generateLJSfromSRT(
     audioPath: string,
     srtPath: string,
