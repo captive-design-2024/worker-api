@@ -10,4 +10,4 @@ RUN yarn install
 
 EXPOSE 4000
 
-CMD bash -c "yarn start:dev"
+CMD bash -c "yarn start"
