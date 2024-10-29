@@ -24,7 +24,7 @@ export class LlmController {
   ) {
     const prompt =
       content +
-      '위는 오디오 추출로 만든 SRT파일이야. 내용을 바탕으로 제목과 해시태그 추천해줘. 형식은 JSON, 내용은 제목:답변, 해시태그1:답변, 해시태그2: 답변 이런식으로 해줘. 답변의 내용은 ' +
+      '위는 오디오 추출로 만든 SRT파일이야. 내용을 바탕으로 제목과 해시태그 추천해줘. 형식은 JSON, 내용은 제목:답변, 해시태그1:답변, 해시태그2: 답변 이런식으로 해줘. 답변의 언어를 ' +
       language +
       '로 해줘';
     return this.messageService.sendMessage(prompt);
