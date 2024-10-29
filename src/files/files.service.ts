@@ -1,8 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 import * as fs from 'fs/promises';
-import { existsSync } from 'fs';
-import { join } from 'path';
 
 @Injectable()
 export class FilesService {
@@ -40,16 +38,5 @@ export class FilesService {
     } catch (err) {
       throw new Error('Failed to update the file');
     }
-  }
-
-  async getMP3(path: string) {
-    const normalizedPath = join(path);
-
-    // Check if the file exists
-    if (!existsSync(normalizedPath)) {
-      throw new NotFoundException('MP3 file not found');
-    }
-
-    return normalizedPath;
   }
 }
