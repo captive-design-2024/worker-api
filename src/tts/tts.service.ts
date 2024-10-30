@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as wavDecoder from 'wav-decoder';
+import getMP3Duration from 'mp3-duration';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
@@ -98,7 +99,8 @@ export class TtsService {
 
     for (const content of contents) {
       const { index, string } = content;
-      await this.textToSpeech(string, folderPath, index);
+      const mp3Path = await this.textToSpeech(string, folderPath, index);
+      this.changeMp3Speed(mp3Path, content);
     }
 
     return folderPath;
@@ -120,6 +122,61 @@ export class TtsService {
     }
 
     return folderPath;
+  }
+
+  async getMp3Duration(mp3Path: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      getMP3Duration(mp3Path, (err, duration) => {
+        if (err) return reject(err);
+        resolve(duration * 1000); // ms 단위로 반환
+      });
+    });
+  }
+
+  async changeMp3Speed(
+    mp3Path: string,
+    content: { start: string; end: string },
+  ): Promise<void> {
+    const { start, end } = content;
+
+    // start, end 시간을 milliseconds로 변환
+    const [shours, sminutes, ssecondsMs] = start.split(':');
+    const [sseconds, smilliseconds] = ssecondsMs.split(',');
+    const stotalMilliseconds =
+      (+shours * 3600 + +sminutes * 60 + +sseconds) * 1000 + +smilliseconds;
+
+    const [ehours, eminutes, esecondsMs] = end.split(':');
+    const [eseconds, emilliseconds] = esecondsMs.split(',');
+    const etotalMilliseconds =
+      (+ehours * 3600 + +eminutes * 60 + +eseconds) * 1000 + +emilliseconds;
+
+    // OriginalDuration: 지정된 start-end 구간의 시간
+    const OriginalDuration = etotalMilliseconds - stotalMilliseconds;
+
+    // MP3 파일의 총 길이 가져오기
+    const mp3Duration = await this.getMp3Duration(mp3Path);
+
+    // 속도 계산
+    const speed = mp3Duration / OriginalDuration;
+
+    // ffmpeg로 MP3 속도 변경 후 WAV로 출력
+    return new Promise((resolve, reject) => {
+      const outputFileName = mp3Path.replace('O_', '').replace('.mp3', '.wav'); // WAV 파일로 저장
+
+      const ffmpegCommand = ffmpeg();
+
+      ffmpegCommand
+        .input(mp3Path)
+        .audioFilters(`atempo=${speed}`)
+        .on('end', () => {
+          resolve();
+        })
+        .on('error', (err) => {
+          reject(err);
+        })
+        .toFormat('wav')
+        .save(outputFileName);
+    });
   }
 
   async getWavDuration(wavPath: string): Promise<number> {
