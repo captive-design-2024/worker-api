@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import * as ffmpeg from 'fluent-ffmpeg';
 import * as wavDecoder from 'wav-decoder';
-import getMP3Duration from 'mp3-duration';
+import * as getMP3Duration from 'mp3-duration';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
@@ -128,7 +128,7 @@ export class TtsService {
     return new Promise((resolve, reject) => {
       getMP3Duration(mp3Path, (err, duration) => {
         if (err) return reject(err);
-        resolve(duration * 1000); // ms 단위로 반환
+        resolve(duration * 1000);
       });
     });
   }
@@ -139,7 +139,6 @@ export class TtsService {
   ): Promise<void> {
     const { start, end } = content;
 
-    // start, end 시간을 milliseconds로 변환
     const [shours, sminutes, ssecondsMs] = start.split(':');
     const [sseconds, smilliseconds] = ssecondsMs.split(',');
     const stotalMilliseconds =
@@ -150,16 +149,16 @@ export class TtsService {
     const etotalMilliseconds =
       (+ehours * 3600 + +eminutes * 60 + +eseconds) * 1000 + +emilliseconds;
 
-    // OriginalDuration: 지정된 start-end 구간의 시간
     const OriginalDuration = etotalMilliseconds - stotalMilliseconds;
 
-    // MP3 파일의 총 길이 가져오기
     const mp3Duration = await this.getMp3Duration(mp3Path);
 
-    // 속도 계산
-    const speed = mp3Duration / OriginalDuration;
+    let speed = mp3Duration / OriginalDuration;
 
-    // ffmpeg로 MP3 속도 변경 후 WAV로 출력
+    if (speed < 0.6) {
+      speed = 0.6;
+    }
+
     return new Promise((resolve, reject) => {
       const outputFileName = mp3Path.replace('O_', '').replace('.mp3', '.wav'); // WAV 파일로 저장
 
@@ -206,7 +205,11 @@ export class TtsService {
     const OriginalDuration = etotalMilliseconds - stotalMilliseconds;
     const wavDuration = await this.getWavDuration(wavPath);
 
-    const speed = wavDuration / OriginalDuration;
+    let speed = wavDuration / OriginalDuration;
+
+    if (speed < 0.6) {
+      speed = 0.6;
+    }
 
     return new Promise((resolve, reject) => {
       const outputFileName = wavPath.replace('O_', '');
@@ -322,7 +325,7 @@ export class TtsService {
 
   async generateVoiceOver(contents: any): Promise<string> {
     const folderPath = await this.generateDubParts(contents);
-    return this.createSequence(folderPath, contents);
+    return this.createVCSequence(folderPath, contents);
   }
 
   async generateVCVoiceOver(contents: any): Promise<string> {
